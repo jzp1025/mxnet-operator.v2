@@ -20,7 +20,7 @@ import (
 
 	"k8s.io/api/core/v1"
 
-	"github.com/kubeflow/tf-operator/pkg/util"
+	"github.com/kubeflow/mxnet-operator/pkg/util"
 )
 
 const (

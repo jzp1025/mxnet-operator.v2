@@ -30,14 +30,14 @@ import (
 	"k8s.io/client-go/tools/leaderelection/resourcelock"
 	"k8s.io/client-go/tools/record"
 
-	"github.com/kubeflow/mx-operator/cmd/mx-operator.v2/app/options"
-	"github.com/kubeflow/mx-operator/pkg/apis/mxnet/v1alpha2"
-	mxjobclientset "github.com/kubeflow/mx-operator/pkg/client/clientset/versioned"
-	"github.com/kubeflow/mx-operator/pkg/client/clientset/versioned/scheme"
-	mxjobinformers "github.com/kubeflow/mx-operator/pkg/client/informers/externalversions"
-	controller "github.com/kubeflow/mx-operator/pkg/controller.v2/mxcontroller"
-	"github.com/kubeflow/mx-operator/pkg/util/signals"
-	"github.com/kubeflow/mx-operator/pkg/version"
+	"github.com/kubeflow/mxnet-operator.v2/cmd/mxnet-operator.v2/app/options"
+	"github.com/kubeflow/mxnet-operator.v2/pkg/apis/mxnet/v1alpha2"
+	mxjobclientset "github.com/kubeflow/mxnet-operator.v2/pkg/client/clientset/versioned"
+	"github.com/kubeflow/mxnet-operator.v2/pkg/client/clientset/versioned/scheme"
+	mxjobinformers "github.com/kubeflow/mxnet-operator.v2/pkg/client/informers/externalversions"
+	controller "github.com/kubeflow/mxnet-operator.v2/pkg/controller.v2/mxcontroller"
+	"github.com/kubeflow/mxnet-operator.v2/pkg/util/signals"
+	"github.com/kubeflow/mxnet-operator.v2/pkg/version"
 )
 
 const (
