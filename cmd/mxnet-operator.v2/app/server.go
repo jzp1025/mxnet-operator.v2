@@ -107,8 +107,7 @@ func Run(opt *options.ServerOption) error {
 	go kubeInformerFactory.Start(stopCh)
 
 	// We do not use the generated informer because of
-	// https://github.com/kubeflow/tf-operator/issues/561
-	// go tfJobInformerFactory.Start(stopCh)
+	// go mxJobInformerFactory.Start(stopCh)
 	go unstructuredInformer.Informer().Run(stopCh)
 
 	// Set leader election start function.
