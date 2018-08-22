@@ -19,7 +19,7 @@ import (
 	"strings"
 	"testing"
 
-	tfv1alpha2 "github.com/kubeflow/tf-operator/pkg/apis/tensorflow/v1alpha2"
+	mxv1alpha2 "github.com/kubeflow/mxnet-operator.v2/pkg/apis/mxnet/v1alpha2"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -28,7 +28,7 @@ import (
 
 const (
 	LabelGroupName = "group_name"
-	LabelTFJobName = "tf_job_name"
+	LabelMXJobName = "mxnet_job_name"
 )
 
 var (
@@ -36,23 +36,23 @@ var (
 	// IndexerInformer uses a delta queue, therefore for deletes we have to use this
 	// key function but it should be just fine for non delete events.
 	KeyFunc   = cache.DeletionHandlingMetaNamespaceKeyFunc
-	GroupName = tfv1alpha2.GroupName
+	GroupName = mxv1alpha2.GroupName
 )
 
 func GenLabels(jobName string) map[string]string {
 	return map[string]string{
 		LabelGroupName: GroupName,
-		LabelTFJobName: strings.Replace(jobName, "/", "-", -1),
+		LabelMXJobName: strings.Replace(jobName, "/", "-", -1),
 	}
 }
 
-func GenOwnerReference(tfjob *tfv1alpha2.TFJob) *metav1.OwnerReference {
+func GenOwnerReference(mxjob *mxv1alpha2.MXJob) *metav1.OwnerReference {
 	boolPtr := func(b bool) *bool { return &b }
 	controllerRef := &metav1.OwnerReference{
-		APIVersion:         tfv1alpha2.SchemeGroupVersion.String(),
-		Kind:               tfv1alpha2.Kind,
-		Name:               tfjob.Name,
-		UID:                tfjob.UID,
+		APIVersion:         mxv1alpha2.SchemeGroupVersion.String(),
+		Kind:               mxv1alpha2.Kind,
+		Name:               mxjob.Name,
+		UID:                mxjob.UID,
 		BlockOwnerDeletion: boolPtr(true),
 		Controller:         boolPtr(true),
 	}
@@ -60,10 +60,10 @@ func GenOwnerReference(tfjob *tfv1alpha2.TFJob) *metav1.OwnerReference {
 	return controllerRef
 }
 
-// ConvertTFJobToUnstructured uses JSON to convert TFJob to Unstructured.
-func ConvertTFJobToUnstructured(tfJob *tfv1alpha2.TFJob) (*unstructured.Unstructured, error) {
+// ConvertMXJobToUnstructured uses JSON to convert MXJob to Unstructured.
+func ConvertMXJobToUnstructured(mxJob *mxv1alpha2.MXJob) (*unstructured.Unstructured, error) {
 	var unstructured unstructured.Unstructured
-	b, err := json.Marshal(tfJob)
+	b, err := json.Marshal(mxJob)
 	if err != nil {
 		return nil, err
 	}
@@ -74,17 +74,17 @@ func ConvertTFJobToUnstructured(tfJob *tfv1alpha2.TFJob) (*unstructured.Unstruct
 	return &unstructured, nil
 }
 
-func GetKey(tfJob *tfv1alpha2.TFJob, t *testing.T) string {
-	key, err := KeyFunc(tfJob)
+func GetKey(mxJob *mxv1alpha2.MXJob, t *testing.T) string {
+	key, err := KeyFunc(mxJob)
 	if err != nil {
-		t.Errorf("Unexpected error getting key for job %v: %v", tfJob.Name, err)
+		t.Errorf("Unexpected error getting key for job %v: %v", mxJob.Name, err)
 		return ""
 	}
 	return key
 }
 
-func CheckCondition(tfJob *tfv1alpha2.TFJob, condition tfv1alpha2.TFJobConditionType, reason string) bool {
-	for _, v := range tfJob.Status.Conditions {
+func CheckCondition(mxJob *mxv1alpha2.MXJob, condition mxv1alpha2.MXJobConditionType, reason string) bool {
+	for _, v := range mxJob.Status.Conditions {
 		if v.Type == condition && v.Status == v1.ConditionTrue && v.Reason == reason {
 			return true
 		}

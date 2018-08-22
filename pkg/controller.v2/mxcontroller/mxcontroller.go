@@ -369,9 +369,9 @@ func (tc *MXController) reconcileMXJobs(mxjob *mxv1alpha2.MXJob) error {
 		}
 
 		// Initialize the status.
+		initializeMXReplicaStatuses(mxjob, mxv1alpha2.MXReplicaTypeScheduler)
 		initializeMXReplicaStatuses(mxjob, mxv1alpha2.MXReplicaTypeWorker)
-		initializeMXReplicaStatuses(mxjob, mxv1alpha2.MXReplicaTypePS)
-		initializeMXReplicaStatuses(mxjob, mxv1alpha2.MXReplicaTypeChief)
+		initializeMXReplicaStatuses(mxjob, mxv1alpha2.MXReplicaTypeServer)
 		return tc.updateStatusHandler(mxjob)
 	}
 

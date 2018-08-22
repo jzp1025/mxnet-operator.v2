@@ -113,7 +113,7 @@ func (tc *MXController) createNewService(mxjob *mxv1alpha2.MXJob, rtype mxv1alph
 	}
 
 	// Create OwnerReference.
-	controllerRef := tc.GenOwnerReference(tfjob)
+	controllerRef := tc.GenOwnerReference(mxjob)
 
 	// Append mxReplicaTypeLabel and mxReplicaIndexLabel labels.
 	labels := tc.GenLabels(mxjob.Name)

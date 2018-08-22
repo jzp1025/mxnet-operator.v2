@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package tfcontroller
+package mxcontroller
 
 import (
 	"testing"
@@ -20,29 +20,29 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
-	tfv1alpha2 "github.com/kubeflow/tf-operator/pkg/apis/tensorflow/v1alpha2"
-	"github.com/kubeflow/tf-operator/pkg/util/testutil"
+	mxv1alpha2 "github.com/kubeflow/mxnet-operator.v2/pkg/apis/mxnet/v1alpha2"
+	"github.com/kubeflow/mxnet-operator.v2/pkg/util/testutil"
 )
 
 func TestGenOwnerReference(t *testing.T) {
-	testName := "test-tfjob"
+	testName := "test-mxjob"
 	testUID := types.UID("test-UID")
-	tfJob := &tfv1alpha2.TFJob{
+	mxJob := &mxv1alpha2.MXJob{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: testName,
 			UID:  testUID,
 		},
 	}
 
-	ref := testutil.GenOwnerReference(tfJob)
+	ref := testutil.GenOwnerReference(mxJob)
 	if ref.UID != testUID {
 		t.Errorf("Expected UID %s, got %s", testUID, ref.UID)
 	}
 	if ref.Name != testName {
 		t.Errorf("Expected Name %s, got %s", testName, ref.Name)
 	}
-	if ref.APIVersion != tfv1alpha2.SchemeGroupVersion.String() {
-		t.Errorf("Expected APIVersion %s, got %s", tfv1alpha2.SchemeGroupVersion.String(), ref.APIVersion)
+	if ref.APIVersion != mxv1alpha2.SchemeGroupVersion.String() {
+		t.Errorf("Expected APIVersion %s, got %s", mxv1alpha2.SchemeGroupVersion.String(), ref.APIVersion)
 	}
 }
 
@@ -52,20 +52,20 @@ func TestGenLabels(t *testing.T) {
 
 	labels := testutil.GenLabels(testKey)
 
-	if labels[labelTFJobName] != expctedKey {
-		t.Errorf("Expected %s %s, got %s", labelTFJobName, expctedKey, labels[labelTFJobName])
+	if labels[labelMXJobName] != expctedKey {
+		t.Errorf("Expected %s %s, got %s", labelMXJobName, expctedKey, labels[labelMXJobName])
 	}
-	if labels[labelGroupName] != tfv1alpha2.GroupName {
-		t.Errorf("Expected %s %s, got %s", labelGroupName, tfv1alpha2.GroupName, labels[labelGroupName])
+	if labels[labelGroupName] != mxv1alpha2.GroupName {
+		t.Errorf("Expected %s %s, got %s", labelGroupName, mxv1alpha2.GroupName, labels[labelGroupName])
 	}
 }
 
-func TestConvertTFJobToUnstructured(t *testing.T) {
-	testName := "test-tfjob"
+func TestConvertMXJobToUnstructured(t *testing.T) {
+	testName := "test-mxjob"
 	testUID := types.UID("test-UID")
-	tfJob := &tfv1alpha2.TFJob{
+	mxJob := &mxv1alpha2.MXJob{
 		TypeMeta: metav1.TypeMeta{
-			Kind: tfv1alpha2.Kind,
+			Kind: mxv1alpha2.Kind,
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name: testName,
@@ -73,7 +73,7 @@ func TestConvertTFJobToUnstructured(t *testing.T) {
 		},
 	}
 
-	_, err := testutil.ConvertTFJobToUnstructured(tfJob)
+	_, err := testutil.ConvertMXJobToUnstructured(mxJob)
 	if err != nil {
 		t.Errorf("Expected error to be nil while got %v", err)
 	}

@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package controller provides a Kubernetes controller for a TFJob resource.
-package tfcontroller
+// Package controller provides a Kubernetes controller for a MXJob resource.
+package mxcontroller
 
 import (
 	"testing"
@@ -23,10 +23,10 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/kubernetes/pkg/controller"
 
-	"github.com/kubeflow/tf-operator/cmd/tf-operator.v2/app/options"
-	tfv1alpha2 "github.com/kubeflow/tf-operator/pkg/apis/tensorflow/v1alpha2"
-	tfjobclientset "github.com/kubeflow/tf-operator/pkg/client/clientset/versioned"
-	"github.com/kubeflow/tf-operator/pkg/util/testutil"
+	"github.com/kubeflow/mxnet-operator.v2/cmd/mxnet-operator.v2/app/options"
+	mxv1alpha2 "github.com/kubeflow/mxnet-operator.v2/pkg/apis/mxnet/v1alpha2"
+	mxjobclientset "github.com/kubeflow/mxnet-operator.v2/pkg/client/clientset/versioned"
+	"github.com/kubeflow/mxnet-operator.v2/pkg/util/testutil"
 )
 
 func TestAddPod(t *testing.T) {
@@ -41,15 +41,15 @@ func TestAddPod(t *testing.T) {
 	config := &rest.Config{
 		Host: "",
 		ContentConfig: rest.ContentConfig{
-			GroupVersion: &tfv1alpha2.SchemeGroupVersion,
+			GroupVersion: &mxv1alpha2.SchemeGroupVersion,
 		},
 	}
-	tfJobClientSet := tfjobclientset.NewForConfigOrDie(config)
-	ctr, _, _ := newTFController(config, kubeClientSet, tfJobClientSet, controller.NoResyncPeriodFunc, options.ServerOption{})
-	ctr.tfJobInformerSynced = testutil.AlwaysReady
+	mxJobClientSet := mxjobclientset.NewForConfigOrDie(config)
+	ctr, _, _ := newMXController(config, kubeClientSet, mxJobClientSet, controller.NoResyncPeriodFunc, options.ServerOption{})
+	ctr.mxJobInformerSynced = testutil.AlwaysReady
 	ctr.PodInformerSynced = testutil.AlwaysReady
 	ctr.ServiceInformerSynced = testutil.AlwaysReady
-	tfJobIndexer := ctr.tfJobInformer.GetIndexer()
+	mxJobIndexer := ctr.mxJobInformer.GetIndexer()
 
 	stopCh := make(chan struct{})
 	run := func(<-chan struct{}) {
@@ -59,125 +59,81 @@ func TestAddPod(t *testing.T) {
 
 	var key string
 	syncChan := make(chan string)
-	ctr.syncHandler = func(tfJobKey string) (bool, error) {
-		key = tfJobKey
+	ctr.syncHandler = func(mxJobKey string) (bool, error) {
+		key = mxJobKey
 		<-syncChan
 		return true, nil
 	}
 
-	tfJob := testutil.NewTFJob(1, 0)
-	unstructured, err := testutil.ConvertTFJobToUnstructured(tfJob)
+	mxJob := testutil.NewMXJob(1, 0)
+	unstructured, err := testutil.ConvertMXJobToUnstructured(mxJob)
 	if err != nil {
-		t.Errorf("Failed to convert the TFJob to Unstructured: %v", err)
+		t.Errorf("Failed to convert the MXJob to Unstructured: %v", err)
 	}
 
-	if err := tfJobIndexer.Add(unstructured); err != nil {
-		t.Errorf("Failed to add tfjob to tfJobIndexer: %v", err)
+	if err := mxJobIndexer.Add(unstructured); err != nil {
+		t.Errorf("Failed to add mxjob to mxJobIndexer: %v", err)
 	}
-	pod := testutil.NewPod(tfJob, testutil.LabelWorker, 0, t)
+	pod := testutil.NewPod(mxJob, testutil.LabelWorker, 0, t)
 	ctr.AddPod(pod)
 
 	syncChan <- "sync"
-	if key != testutil.GetKey(tfJob, t) {
-		t.Errorf("Failed to enqueue the TFJob %s: expected %s, got %s", tfJob.Name, testutil.GetKey(tfJob, t), key)
+	if key != testutil.GetKey(mxJob, t) {
+		t.Errorf("Failed to enqueue the MXJob %s: expected %s, got %s", mxJob.Name, testutil.GetKey(mxJob, t), key)
 	}
 	close(stopCh)
 }
 
-func TestClusterSpec(t *testing.T) {
-	type tc struct {
-		tfJob               *tfv1alpha2.TFJob
-		rt                  string
-		index               string
-		expectedClusterSpec string
-	}
-	testCase := []tc{
-		tc{
-			tfJob: testutil.NewTFJob(1, 0),
-			rt:    "worker",
-			index: "0",
-			expectedClusterSpec: `{"cluster":{"worker":["` + testutil.TestTFJobName +
-				`-worker-0:2222"]},"task":{"type":"worker","index":0},"environment":"cloud"}`,
-		},
-		tc{
-			tfJob: testutil.NewTFJob(1, 1),
-			rt:    "worker",
-			index: "0",
-			expectedClusterSpec: `{"cluster":{"ps":["` + testutil.TestTFJobName +
-				`-ps-0:2222"],"worker":["` + testutil.TestTFJobName +
-				`-worker-0:2222"]},"task":{"type":"worker","index":0},"environment":"cloud"}`,
-		},
-		tc{
-			tfJob: testutil.NewTFJobWithEvaluator(1, 1, 1),
-			rt:    "worker",
-			index: "0",
-			expectedClusterSpec: `{"cluster":{"ps":["` + testutil.TestTFJobName +
-				`-ps-0:2222"],"worker":["` + testutil.TestTFJobName +
-				`-worker-0:2222"]},"task":{"type":"worker","index":0},"environment":"cloud"}`,
-		},
-	}
-	for _, c := range testCase {
-		demoTemplateSpec := c.tfJob.Spec.TFReplicaSpecs[tfv1alpha2.TFReplicaTypeWorker].Template
-		if err := setClusterSpec(&demoTemplateSpec, c.tfJob, c.rt, c.index); err != nil {
-			t.Errorf("Failed to set cluster spec: %v", err)
-		}
-		actual := demoTemplateSpec.Spec.Containers[0].Env[0].Value
-		if c.expectedClusterSpec != actual {
-			t.Errorf("Expected %s, got %s", c.expectedClusterSpec, actual)
-		}
-	}
-}
-
 func TestRestartPolicy(t *testing.T) {
 	type tc struct {
-		tfJob                 *tfv1alpha2.TFJob
+		mxJob                 *mxv1alpha2.MXJob
 		expectedRestartPolicy v1.RestartPolicy
-		expectedType          tfv1alpha2.TFReplicaType
+		expectedType          mxv1alpha2.MXReplicaType
 	}
 	testCase := []tc{
 		func() tc {
-			tfJob := testutil.NewTFJob(1, 0)
-			specRestartPolicy := tfv1alpha2.RestartPolicyExitCode
-			tfJob.Spec.TFReplicaSpecs[tfv1alpha2.TFReplicaTypeWorker].RestartPolicy = specRestartPolicy
+			mxJob := testutil.NewMXJob(1, 0)
+			specRestartPolicy := mxv1alpha2.RestartPolicyExitCode
+			mxJob.Spec.MXReplicaSpecs[mxv1alpha2.MXReplicaTypeWorker].RestartPolicy = specRestartPolicy
 			return tc{
-				tfJob: tfJob,
+				mxJob: mxJob,
 				expectedRestartPolicy: v1.RestartPolicyNever,
-				expectedType:          tfv1alpha2.TFReplicaTypeWorker,
+				expectedType:          mxv1alpha2.MXReplicaTypeWorker,
 			}
 		}(),
 		func() tc {
-			tfJob := testutil.NewTFJob(1, 0)
-			specRestartPolicy := tfv1alpha2.RestartPolicyNever
-			tfJob.Spec.TFReplicaSpecs[tfv1alpha2.TFReplicaTypeWorker].RestartPolicy = specRestartPolicy
+			mxJob := testutil.NewMXJob(1, 0)
+			specRestartPolicy := mxv1alpha2.RestartPolicyNever
+			mxJob.Spec.MXReplicaSpecs[mxv1alpha2.MXReplicaTypeWorker].RestartPolicy = specRestartPolicy
 			return tc{
-				tfJob: tfJob,
+				mxJob: mxJob,
 				expectedRestartPolicy: v1.RestartPolicyNever,
-				expectedType:          tfv1alpha2.TFReplicaTypeWorker,
+				expectedType:          mxv1alpha2.MXReplicaTypeWorker,
 			}
 		}(),
 		func() tc {
-			tfJob := testutil.NewTFJob(1, 0)
-			specRestartPolicy := tfv1alpha2.RestartPolicyAlways
-			tfJob.Spec.TFReplicaSpecs[tfv1alpha2.TFReplicaTypeWorker].RestartPolicy = specRestartPolicy
+			mxJob := testutil.NewMXJob(1, 0)
+			specRestartPolicy := mxv1alpha2.RestartPolicyAlways
+			mxJob.Spec.MXReplicaSpecs[mxv1alpha2.MXReplicaTypeWorker].RestartPolicy = specRestartPolicy
 			return tc{
-				tfJob: tfJob,
+				mxJob: mxJob,
 				expectedRestartPolicy: v1.RestartPolicyAlways,
-				expectedType:          tfv1alpha2.TFReplicaTypeWorker,
+				expectedType:          mxv1alpha2.MXReplicaTypeWorker,
 			}
 		}(),
 		func() tc {
-			tfJob := testutil.NewTFJob(1, 0)
-			specRestartPolicy := tfv1alpha2.RestartPolicyOnFailure
-			tfJob.Spec.TFReplicaSpecs[tfv1alpha2.TFReplicaTypeWorker].RestartPolicy = specRestartPolicy
+			mxJob := testutil.NewMXJob(1, 0)
+			specRestartPolicy := mxv1alpha2.RestartPolicyOnFailure
+			mxJob.Spec.MXReplicaSpecs[mxv1alpha2.MXReplicaTypeWorker].RestartPolicy = specRestartPolicy
 			return tc{
-				tfJob: tfJob,
+				mxJob: mxJob,
 				expectedRestartPolicy: v1.RestartPolicyOnFailure,
-				expectedType:          tfv1alpha2.TFReplicaTypeWorker,
+				expectedType:          mxv1alpha2.MXReplicaTypeWorker,
 			}
 		}(),
 	}
 	for _, c := range testCase {
-		spec := c.tfJob.Spec.TFReplicaSpecs[c.expectedType]
+		spec := c.mxJob.Spec.MXReplicaSpecs[c.expectedType]
 		podTemplate := spec.Template
 		setRestartPolicy(&podTemplate, spec)
 		if podTemplate.Spec.RestartPolicy != c.expectedRestartPolicy {
@@ -198,17 +154,17 @@ func TestExitCode(t *testing.T) {
 	config := &rest.Config{
 		Host: "",
 		ContentConfig: rest.ContentConfig{
-			GroupVersion: &tfv1alpha2.SchemeGroupVersion,
+			GroupVersion: &mxv1alpha2.SchemeGroupVersion,
 		},
 	}
-	tfJobClientSet := tfjobclientset.NewForConfigOrDie(config)
-	ctr, kubeInformerFactory, _ := newTFController(config, kubeClientSet, tfJobClientSet, controller.NoResyncPeriodFunc, options.ServerOption{})
+	mxJobClientSet := mxjobclientset.NewForConfigOrDie(config)
+	ctr, kubeInformerFactory, _ := newMXController(config, kubeClientSet, mxJobClientSet, controller.NoResyncPeriodFunc, options.ServerOption{})
 	fakePodControl := &controller.FakePodControl{}
 	ctr.PodControl = fakePodControl
-	ctr.tfJobInformerSynced = testutil.AlwaysReady
+	ctr.mxJobInformerSynced = testutil.AlwaysReady
 	ctr.PodInformerSynced = testutil.AlwaysReady
 	ctr.ServiceInformerSynced = testutil.AlwaysReady
-	tfJobIndexer := ctr.tfJobInformer.GetIndexer()
+	mxJobIndexer := ctr.mxJobInformer.GetIndexer()
 	podIndexer := kubeInformerFactory.Core().V1().Pods().Informer().GetIndexer()
 
 	stopCh := make(chan struct{})
@@ -217,25 +173,25 @@ func TestExitCode(t *testing.T) {
 	}
 	go run(stopCh)
 
-	ctr.updateStatusHandler = func(tfJob *tfv1alpha2.TFJob) error {
+	ctr.updateStatusHandler = func(mxJob *mxv1alpha2.MXJob) error {
 		return nil
 	}
 
-	tfJob := testutil.NewTFJob(1, 0)
-	tfJob.Spec.TFReplicaSpecs[tfv1alpha2.TFReplicaTypeWorker].RestartPolicy = tfv1alpha2.RestartPolicyExitCode
-	unstructured, err := testutil.ConvertTFJobToUnstructured(tfJob)
+	mxJob := testutil.NewMXJob(1, 0)
+	mxJob.Spec.MXReplicaSpecs[mxv1alpha2.MXReplicaTypeWorker].RestartPolicy = mxv1alpha2.RestartPolicyExitCode
+	unstructured, err := testutil.ConvertMXJobToUnstructured(mxJob)
 	if err != nil {
-		t.Errorf("Failed to convert the TFJob to Unstructured: %v", err)
+		t.Errorf("Failed to convert the MXJob to Unstructured: %v", err)
 	}
 
-	if err := tfJobIndexer.Add(unstructured); err != nil {
-		t.Errorf("Failed to add tfjob to tfJobIndexer: %v", err)
+	if err := mxJobIndexer.Add(unstructured); err != nil {
+		t.Errorf("Failed to add mxjob to mxJobIndexer: %v", err)
 	}
-	pod := testutil.NewPod(tfJob, testutil.LabelWorker, 0, t)
+	pod := testutil.NewPod(mxJob, testutil.LabelWorker, 0, t)
 	pod.Status.Phase = v1.PodFailed
 	pod.Spec.Containers = append(pod.Spec.Containers, v1.Container{})
 	pod.Status.ContainerStatuses = append(pod.Status.ContainerStatuses, v1.ContainerStatus{
-		Name: tfv1alpha2.DefaultContainerName,
+		Name: mxv1alpha2.DefaultContainerName,
 		State: v1.ContainerState{
 			Terminated: &v1.ContainerStateTerminated{
 				ExitCode: 130,
@@ -244,11 +200,11 @@ func TestExitCode(t *testing.T) {
 	})
 
 	if err := podIndexer.Add(pod); err != nil {
-		t.Errorf("%s: unexpected error when adding pod %v", tfJob.Name, err)
+		t.Errorf("%s: unexpected error when adding pod %v", mxJob.Name, err)
 	}
-	_, err = ctr.syncTFJob(testutil.GetKey(tfJob, t))
+	_, err = ctr.syncMXJob(testutil.GetKey(mxJob, t))
 	if err != nil {
-		t.Errorf("%s: unexpected error when syncing jobs %v", tfJob.Name, err)
+		t.Errorf("%s: unexpected error when syncing jobs %v", mxJob.Name, err)
 	}
 
 	found := false

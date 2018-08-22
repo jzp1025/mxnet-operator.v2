@@ -68,9 +68,9 @@ func setDefaultReplicas(spec *MXReplicaSpec) {
 // setTypeNamesToCamelCase sets the name of all replica types from any case to correct case.
 func setTypeNamesToCamelCase(mxJob *MXJob) {
 	setTypeNameToCamelCase(mxJob, MXReplicaTypeScheduler)
-}
 	setTypeNameToCamelCase(mxJob, MXReplicaTypeServer)
 	setTypeNameToCamelCase(mxJob, MXReplicaTypeWorker)
+}
 
 // setTypeNameToCamelCase sets the name of the replica type from any case to correct case.
 // E.g. from server to Server; from WORKER to Worker.

@@ -55,13 +55,11 @@ func NewUnstructuredMXJobInformer(restConfig *restclientset.Config) mxjobinforme
 }
 
 // NewMXJobInformer returns MXJobInformer from the given factory.
-func (tc *MXController) NewMXJobInformer(mxJobInformerFactory mxjobinformers.SharedInformerFactory) mxjobinformersv1alpha2.MXJobInformer 
-{ 
+func (tc *MXController) NewMXJobInformer(mxJobInformerFactory mxjobinformers.SharedInformerFactory) mxjobinformersv1alpha2.MXJobInformer {
 	return mxJobInformerFactory.Kubeflow().V1alpha2().MXJobs()
 }
 
-func (tc *MXController) getMXJobFromName(namespace, name string) (*mxv1alpha2.MXJob, error) 
-{ 	
+func (tc *MXController) getMXJobFromName(namespace, name string) (*mxv1alpha2.MXJob, error) { 	
 	key := fmt.Sprintf("%s/%s", namespace, name)
 	return tc.getMXJobFromKey(key)
 }

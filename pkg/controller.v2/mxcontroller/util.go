@@ -41,7 +41,7 @@ func GetPortFromMXJob(mxJob *mxv1alpha2.MXJob, rtype mxv1alpha2.MXReplicaType) (
 }
 
 func ContainSchedulerSpec(mxJob *mxv1alpha2.MXJob) bool {
-	if _, ok := mxJob.Spec.MXReplicaSpecs[mxv1alpha2.MXReplicaTypeChief]; ok {
+	if _, ok := mxJob.Spec.MXReplicaSpecs[mxv1alpha2.MXReplicaTypeScheduler]; ok {
 		return true
 	}
 	return false

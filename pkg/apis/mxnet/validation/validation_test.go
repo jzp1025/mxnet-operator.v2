@@ -17,21 +17,20 @@ package validation
 import (
 	"testing"
 
-	tfv1 "github.com/kubeflow/tf-operator/pkg/apis/tensorflow/v1alpha1"
-	tfv2 "github.com/kubeflow/tf-operator/pkg/apis/tensorflow/v1alpha2"
+	mxv2 "github.com/kubeflow/mxnet-operator.v2/pkg/apis/mxnet/v1alpha2"
 
 	"github.com/gogo/protobuf/proto"
 	"k8s.io/api/core/v1"
 )
 
-func TestValidateAlphaTwoTFJobSpec(t *testing.T) {
-	testCases := []tfv2.TFJobSpec{
+func TestValidateAlphaTwoMXJobSpec(t *testing.T) {
+	testCases := []mxv2.MXJobSpec{
 		{
-			TFReplicaSpecs: nil,
+			MXReplicaSpecs: nil,
 		},
 		{
-			TFReplicaSpecs: map[tfv2.TFReplicaType]*tfv2.TFReplicaSpec{
-				tfv2.TFReplicaTypeWorker: &tfv2.TFReplicaSpec{
+			MXReplicaSpecs: map[mxv2.MXReplicaType]*mxv2.MXReplicaSpec{
+				mxv2.MXReplicaTypeWorker: &mxv2.MXReplicaSpec{
 					Template: v1.PodTemplateSpec{
 						Spec: v1.PodSpec{
 							Containers: []v1.Container{},
@@ -41,8 +40,8 @@ func TestValidateAlphaTwoTFJobSpec(t *testing.T) {
 			},
 		},
 		{
-			TFReplicaSpecs: map[tfv2.TFReplicaType]*tfv2.TFReplicaSpec{
-				tfv2.TFReplicaTypeWorker: &tfv2.TFReplicaSpec{
+			MXReplicaSpecs: map[mxv2.MXReplicaType]*mxv2.MXReplicaSpec{
+				mxv2.MXReplicaTypeWorker: &mxv2.MXReplicaSpec{
 					Template: v1.PodTemplateSpec{
 						Spec: v1.PodSpec{
 							Containers: []v1.Container{
@@ -56,14 +55,14 @@ func TestValidateAlphaTwoTFJobSpec(t *testing.T) {
 			},
 		},
 		{
-			TFReplicaSpecs: map[tfv2.TFReplicaType]*tfv2.TFReplicaSpec{
-				tfv2.TFReplicaTypeWorker: &tfv2.TFReplicaSpec{
+			MXReplicaSpecs: map[mxv2.MXReplicaType]*mxv2.MXReplicaSpec{
+				mxv2.MXReplicaTypeWorker: &mxv2.MXReplicaSpec{
 					Template: v1.PodTemplateSpec{
 						Spec: v1.PodSpec{
 							Containers: []v1.Container{
 								v1.Container{
 									Name:  "",
-									Image: "kubeflow/tf-dist-mnist-test:1.0",
+									Image: "mxjob/mxnet:gpu",
 								},
 							},
 						},
@@ -73,98 +72,9 @@ func TestValidateAlphaTwoTFJobSpec(t *testing.T) {
 		},
 	}
 	for _, c := range testCases {
-		err := ValidateAlphaTwoTFJobSpec(&c)
-		if err.Error() != "TFJobSpec is not valid" {
-			t.Error("Failed validate the alpha2.TFJobSpec")
-		}
-	}
-}
-
-func TestValidate(t *testing.T) {
-	type testCase struct {
-		in             *tfv1.TFJobSpec
-		expectingError bool
-	}
-
-	testCases := []testCase{
-		{
-			in: &tfv1.TFJobSpec{
-				ReplicaSpecs: []*tfv1.TFReplicaSpec{
-					{
-						Template: &v1.PodTemplateSpec{
-							Spec: v1.PodSpec{
-								Containers: []v1.Container{
-									{
-										Name: "tensorflow",
-									},
-								},
-							},
-						},
-						TFReplicaType: tfv1.MASTER,
-						Replicas:      proto.Int32(1),
-					},
-				},
-				TFImage: "tensorflow/tensorflow:1.3.0",
-			},
-			expectingError: false,
-		},
-		{
-			in: &tfv1.TFJobSpec{
-				ReplicaSpecs: []*tfv1.TFReplicaSpec{
-					{
-						Template: &v1.PodTemplateSpec{
-							Spec: v1.PodSpec{
-								Containers: []v1.Container{
-									{
-										Name: "tensorflow",
-									},
-								},
-							},
-						},
-						TFReplicaType: tfv1.WORKER,
-						Replicas:      proto.Int32(1),
-					},
-				},
-				TFImage: "tensorflow/tensorflow:1.3.0",
-			},
-			expectingError: true,
-		},
-		{
-			in: &tfv1.TFJobSpec{
-				ReplicaSpecs: []*tfv1.TFReplicaSpec{
-					{
-						Template: &v1.PodTemplateSpec{
-							Spec: v1.PodSpec{
-								Containers: []v1.Container{
-									{
-										Name: "tensorflow",
-									},
-								},
-							},
-						},
-						TFReplicaType: tfv1.WORKER,
-						Replicas:      proto.Int32(1),
-					},
-				},
-				TFImage: "tensorflow/tensorflow:1.3.0",
-				TerminationPolicy: &tfv1.TerminationPolicySpec{
-					Chief: &tfv1.ChiefSpec{
-						ReplicaName:  "WORKER",
-						ReplicaIndex: 0,
-					},
-				},
-			},
-			expectingError: false,
-		},
-	}
-
-	for _, c := range testCases {
-		job := &tfv1.TFJob{
-			Spec: *c.in,
-		}
-		tfv1.SetObjectDefaults_TFJob(job)
-		if err := ValidateTFJobSpec(&job.Spec); (err != nil) != c.expectingError {
-			t.Errorf("unexpected validation result: %v", err)
+		err := ValidateAlphaTwoMXJobSpec(&c)
+		if err.Error() != "MXJobSpec is not valid" {
+			t.Error("Failed validate the alpha2.MXJobSpec")
 		}
 	}
 }

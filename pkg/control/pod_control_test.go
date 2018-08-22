@@ -33,7 +33,7 @@ import (
 	"k8s.io/kubernetes/pkg/api/legacyscheme"
 	"k8s.io/kubernetes/pkg/api/testapi"
 
-	"github.com/kubeflow/tf-operator/pkg/util/testutil"
+	"github.com/kubeflow/mxnet-operator.v2/pkg/util/testutil"
 )
 
 func TestCreatePods(t *testing.T) {
@@ -52,21 +52,21 @@ func TestCreatePods(t *testing.T) {
 		Recorder:   &record.FakeRecorder{},
 	}
 
-	tfJob := testutil.NewTFJob(1, 0)
+	mxJob := testutil.NewMXJobWithScheduler(1, 0)
 
 	testName := "pod-name"
-	podTemplate := testutil.NewTFReplicaSpecTemplate()
+	podTemplate := testutil.NewMXReplicaSpecTemplate()
 	podTemplate.Name = testName
-	podTemplate.Labels = testutil.GenLabels(tfJob.Name)
+	podTemplate.Labels = testutil.GenLabels(mxJob.Name)
 	podTemplate.SetOwnerReferences([]metav1.OwnerReference{})
 
 	// Make sure createReplica sends a POST to the apiserver with a pod from the controllers pod template
-	err := podControl.CreatePods(ns, &podTemplate, tfJob)
+	err := podControl.CreatePods(ns, &podTemplate, mxJob)
 	assert.NoError(t, err, "unexpected error: %v", err)
 
 	expectedPod := v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			Labels: testutil.GenLabels(tfJob.Name),
+			Labels: testutil.GenLabels(mxJob.Name),
 			Name:   testName,
 		},
 		Spec: podTemplate.Spec,

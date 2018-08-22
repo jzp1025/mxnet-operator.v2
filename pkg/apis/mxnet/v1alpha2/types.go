@@ -31,7 +31,7 @@ type MXJob struct {
 	// Standard object's metadata.
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	// Specification of the desired behavior of the TFJob.
+	// Specification of the desired behavior of the MXJob.
 	Spec MXJobSpec `json:"spec,omitempty"`
 
 	// Most recently observed status of the MXJob.
@@ -59,8 +59,8 @@ type MXJobSpec struct {
 	// specifies the MX replicas to run.
 	// For example,
 	//   {
-	//     "Scheduler": MXReplicaspec,
-	//     "Server": MXReplicaSpec,
+        //     "Scheduler": MXReplicaSpec,
+	//     "PS": MXReplicaSpec,
 	//     "Worker": MXReplicaSpec,
 	//   }
 	MXReplicaSpecs map[MXReplicaType]*MXReplicaSpec `json:"mxReplicaSpecs"`
@@ -116,15 +116,16 @@ const (
 type MXReplicaType string
 
 const (
-	// MXReplicaTypePS is the type for parameter servers of distributed MXNet.
+	// MXReplicaTypeScheduler is the type for scheduler replica in MXNet.
+	MXReplicaTypeScheduler MXReplicaType = "Scheduler"
+
+	// MXReplicaTypeServer is the type for parameter servers of distributed MXNet.
 	MXReplicaTypeServer MXReplicaType = "Server"
 
 	// MXReplicaTypeWorker is the type for workers of distributed MXNet.
 	// This is also used for non-distributed MXNet.
 	MXReplicaTypeWorker MXReplicaType = "Worker"
 
-	// MXReplicaTypeEval is the type for scheduing servers & workers in MXNet.
-	MxReplicaTypeEval MXReplicaType = "Scheduler"
 )
 
 // MXJobStatus represents the current observed state of the MXJob.
@@ -167,7 +168,7 @@ type MXReplicaStatus struct {
 // MXJobCondition describes the state of the MXJob at a certain point.
 type MXJobCondition struct {
 	// Type of MXJob condition.
-	Type MxJobConditionType `json:"type"`
+	Type MXJobConditionType `json:"type"`
 	// Status of the condition, one of True, False, Unknown.
 	Status v1.ConditionStatus `json:"status"`
 	// The reason for the condition's last transition.

@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package controller provides a Kubernetes controller for a TFJob resource.
-package tfcontroller
+// Package controller provides a Kubernetes controller for a MXJob resource.
+package mxcontroller
 
 import (
 	"testing"
@@ -23,10 +23,10 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/kubernetes/pkg/controller"
 
-	"github.com/kubeflow/tf-operator/cmd/tf-operator.v2/app/options"
-	tfv1alpha2 "github.com/kubeflow/tf-operator/pkg/apis/tensorflow/v1alpha2"
-	tfjobclientset "github.com/kubeflow/tf-operator/pkg/client/clientset/versioned"
-	"github.com/kubeflow/tf-operator/pkg/util/testutil"
+	"github.com/kubeflow/mxnet-operator.v2/cmd/mxnet-operator.v2/app/options"
+	mxv1alpha2 "github.com/kubeflow/mxnet-operator.v2/pkg/apis/mxnet/v1alpha2"
+	mxjobclientset "github.com/kubeflow/mxnet-operator.v2/pkg/client/clientset/versioned"
+	"github.com/kubeflow/mxnet-operator.v2/pkg/util/testutil"
 )
 
 func TestAddService(t *testing.T) {
@@ -41,15 +41,15 @@ func TestAddService(t *testing.T) {
 	config := &rest.Config{
 		Host: "",
 		ContentConfig: rest.ContentConfig{
-			GroupVersion: &tfv1alpha2.SchemeGroupVersion,
+			GroupVersion: &mxv1alpha2.SchemeGroupVersion,
 		},
 	}
-	tfJobClientSet := tfjobclientset.NewForConfigOrDie(config)
-	ctr, _, _ := newTFController(config, kubeClientSet, tfJobClientSet, controller.NoResyncPeriodFunc, options.ServerOption{})
-	ctr.tfJobInformerSynced = testutil.AlwaysReady
+	mxJobClientSet := mxjobclientset.NewForConfigOrDie(config)
+	ctr, _, _ := newMXController(config, kubeClientSet, mxJobClientSet, controller.NoResyncPeriodFunc, options.ServerOption{})
+	ctr.mxJobInformerSynced = testutil.AlwaysReady
 	ctr.PodInformerSynced = testutil.AlwaysReady
 	ctr.ServiceInformerSynced = testutil.AlwaysReady
-	tfJobIndexer := ctr.tfJobInformer.GetIndexer()
+	mxJobIndexer := ctr.mxJobInformer.GetIndexer()
 
 	stopCh := make(chan struct{})
 	run := func(<-chan struct{}) {
@@ -59,27 +59,27 @@ func TestAddService(t *testing.T) {
 
 	var key string
 	syncChan := make(chan string)
-	ctr.syncHandler = func(tfJobKey string) (bool, error) {
-		key = tfJobKey
+	ctr.syncHandler = func(mxJobKey string) (bool, error) {
+		key = mxJobKey
 		<-syncChan
 		return true, nil
 	}
 
-	tfJob := testutil.NewTFJob(1, 0)
-	unstructured, err := testutil.ConvertTFJobToUnstructured(tfJob)
+	mxJob := testutil.NewMXJob(1, 0)
+	unstructured, err := testutil.ConvertMXJobToUnstructured(mxJob)
 	if err != nil {
-		t.Errorf("Failed to convert the TFJob to Unstructured: %v", err)
+		t.Errorf("Failed to convert the MXJob to Unstructured: %v", err)
 	}
 
-	if err := tfJobIndexer.Add(unstructured); err != nil {
-		t.Errorf("Failed to add tfjob to tfJobIndexer: %v", err)
+	if err := mxJobIndexer.Add(unstructured); err != nil {
+		t.Errorf("Failed to add mxjob to mxJobIndexer: %v", err)
 	}
-	service := testutil.NewService(tfJob, testutil.LabelWorker, 0, t)
+	service := testutil.NewService(mxJob, testutil.LabelWorker, 0, t)
 	ctr.AddService(service)
 
 	syncChan <- "sync"
-	if key != testutil.GetKey(tfJob, t) {
-		t.Errorf("Failed to enqueue the TFJob %s: expected %s, got %s", tfJob.Name, testutil.GetKey(tfJob, t), key)
+	if key != testutil.GetKey(mxJob, t) {
+		t.Errorf("Failed to enqueue the MXJob %s: expected %s, got %s", mxJob.Name, testutil.GetKey(mxJob, t), key)
 	}
 	close(stopCh)
 }

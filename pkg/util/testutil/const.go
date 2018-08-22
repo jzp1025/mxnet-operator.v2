@@ -19,10 +19,12 @@ import (
 )
 
 const (
-	TestImageName = "test-image-for-kubeflow-tf-operator:latest"
-	TestTFJobName = "test-tfjob"
+	TestImageName = "mxjob/mxnet-operator:v2"
+	TestMXJobName = "test-mxjob"
+
+        LabelScheduler= "scheduler"
 	LabelWorker   = "worker"
-	LabelPS       = "ps"
+	LabelServer   = "server"
 
 	SleepInterval = 500 * time.Millisecond
 	ThreadCount   = 1

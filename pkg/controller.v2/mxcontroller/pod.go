@@ -202,15 +202,17 @@ func setClusterSpec(podTemplateSpec *v1.PodTemplateSpec, mxjob *mxv1alpha2.MXJob
 		
 			port, err := GetPortFromMXJob(mxjob, t)
 			if err != nil {
-				return nil, err
+				return err
 			}	
+                   
+                        rt := strings.ToLower(string(t))
 
 			switch t {
 			case mxv1alpha2.MXReplicaTypeScheduler:
 				c.Env[0].Name = "DMLC_PS_ROOT_PORT"
 				c.Env[0].Value = strconv.Itoa(int(port))
 				c.Env[1].Name = "DMLC_PS_ROOT_URI"
-				c.Env[1].Value = fmt.Sprintf("%v-%v-%v-%v", mxjob.ObjectMeta.Name, strings.ToLower(string(t)), mxjob.Spec.RuntimeId, 0)		
+				c.Env[1].Value = fmt.Sprintf("%s", jobcontroller.GenGeneralName(mxjob.Name, rt, fmt.Sprintf("%d", 0)))		
 				c.Env[4].Name = "DMLC_ROLE"
 				c.Env[4].Value = strings.ToLower(string(t))
 			case mxv1alpha2.MXReplicaTypeServer:

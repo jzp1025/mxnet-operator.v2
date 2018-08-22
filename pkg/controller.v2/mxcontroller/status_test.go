@@ -12,34 +12,34 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package controller provides a Kubernetes controller for a TFJob resource.
-package tfcontroller
+// Package controller provides a Kubernetes controller for a MXJob resource.
+package mxcontroller
 
 import (
 	"testing"
 
 	"k8s.io/api/core/v1"
 
-	tfv1alpha2 "github.com/kubeflow/tf-operator/pkg/apis/tensorflow/v1alpha2"
-	"github.com/kubeflow/tf-operator/pkg/util/testutil"
+	mxv1alpha2 "github.com/kubeflow/mxnet-operator.v2/pkg/apis/mxnet/v1alpha2"
+	"github.com/kubeflow/mxnet-operator.v2/pkg/util/testutil"
 )
 
 func TestFailed(t *testing.T) {
-	tfJob := testutil.NewTFJob(3, 0)
-	initializeTFReplicaStatuses(tfJob, tfv1alpha2.TFReplicaTypeWorker)
-	pod := testutil.NewBasePod("pod", tfJob, t)
+	mxJob := testutil.NewMXJob(3, 0)
+	initializeMXReplicaStatuses(mxJob, mxv1alpha2.MXReplicaTypeWorker)
+	pod := testutil.NewBasePod("pod", mxJob, t)
 	pod.Status.Phase = v1.PodFailed
-	updateTFJobReplicaStatuses(tfJob, tfv1alpha2.TFReplicaTypeWorker, pod)
-	if tfJob.Status.TFReplicaStatuses[tfv1alpha2.TFReplicaTypeWorker].Failed != 1 {
+	updateMXJobReplicaStatuses(mxJob, mxv1alpha2.MXReplicaTypeWorker, pod)
+	if mxJob.Status.MXReplicaStatuses[mxv1alpha2.MXReplicaTypeWorker].Failed != 1 {
 		t.Errorf("Failed to set the failed to 1")
 	}
-	err := updateStatusSingle(tfJob, tfv1alpha2.TFReplicaTypeWorker, 3, false)
+	err := updateStatusSingle(mxJob, mxv1alpha2.MXReplicaTypeWorker, 3, false)
 	if err != nil {
 		t.Errorf("Expected error %v to be nil", err)
 	}
 	found := false
-	for _, condition := range tfJob.Status.Conditions {
-		if condition.Type == tfv1alpha2.TFJobFailed {
+	for _, condition := range mxJob.Status.Conditions {
+		if condition.Type == mxv1alpha2.MXJobFailed {
 			found = true
 		}
 	}
@@ -51,292 +51,157 @@ func TestFailed(t *testing.T) {
 func TestStatus(t *testing.T) {
 	type testCase struct {
 		description string
-		tfJob       *tfv1alpha2.TFJob
+		mxJob       *mxv1alpha2.MXJob
 
-		expectedFailedPS    int32
-		expectedSucceededPS int32
-		expectedActivePS    int32
+		expectedFailedServer    int32
+		expectedSucceededServer int32
+		expectedActiveServer    int32
 
 		expectedFailedWorker    int32
 		expectedSucceededWorker int32
 		expectedActiveWorker    int32
 
-		expectedFailedChief    int32
-		expectedSucceededChief int32
-		expectedActiveChief    int32
+		expectedFailedScheduler    int32
+		expectedSucceededScheduler int32
+		expectedActiveScheduler    int32
 
 		restart bool
 
-		expectedType tfv1alpha2.TFJobConditionType
+		expectedType mxv1alpha2.MXJobConditionType
 	}
 
 	testCases := []testCase{
 		testCase{
-			description:             "Chief worker is succeeded",
-			tfJob:                   testutil.NewTFJobWithChief(1, 0),
-			expectedFailedPS:        0,
-			expectedSucceededPS:     0,
-			expectedActivePS:        0,
-			expectedFailedWorker:    0,
-			expectedSucceededWorker: 1,
-			expectedActiveWorker:    0,
-			expectedFailedChief:     0,
-			expectedSucceededChief:  1,
-			expectedActiveChief:     0,
-			restart:                 false,
-			expectedType:            tfv1alpha2.TFJobSucceeded,
-		},
-		testCase{
-			description:             "Chief worker is running",
-			tfJob:                   testutil.NewTFJobWithChief(1, 0),
-			expectedFailedPS:        0,
-			expectedSucceededPS:     0,
-			expectedActivePS:        0,
-			expectedFailedWorker:    0,
-			expectedSucceededWorker: 0,
-			expectedActiveWorker:    0,
-			expectedFailedChief:     0,
-			expectedSucceededChief:  0,
-			expectedActiveChief:     1,
-			restart:                 false,
-			expectedType:            tfv1alpha2.TFJobRunning,
-		},
-		testCase{
-			description:             "Chief worker is failed",
-			tfJob:                   testutil.NewTFJobWithChief(1, 0),
-			expectedFailedPS:        0,
-			expectedSucceededPS:     0,
-			expectedActivePS:        0,
-			expectedFailedWorker:    0,
-			expectedSucceededWorker: 0,
-			expectedActiveWorker:    0,
-			expectedFailedChief:     1,
-			expectedSucceededChief:  0,
-			expectedActiveChief:     0,
-			restart:                 false,
-			expectedType:            tfv1alpha2.TFJobFailed,
-		},
-		testCase{
-			description:             "(No chief worker) Worker is failed",
-			tfJob:                   testutil.NewTFJob(1, 0),
-			expectedFailedPS:        0,
-			expectedSucceededPS:     0,
-			expectedActivePS:        0,
+			description:             "Worker is failed",
+			mxJob:                   testutil.NewMXJob(1, 0),
+			expectedFailedServer:        0,
+			expectedSucceededServer:     0,
+			expectedActiveServer:        0,
 			expectedFailedWorker:    1,
 			expectedSucceededWorker: 0,
 			expectedActiveWorker:    0,
-			expectedFailedChief:     0,
-			expectedSucceededChief:  0,
-			expectedActiveChief:     0,
+			expectedFailedScheduler:     0,
+			expectedSucceededScheduler:  0,
+			expectedActiveScheduler:     1,
 			restart:                 false,
-			expectedType:            tfv1alpha2.TFJobFailed,
+			expectedType:            mxv1alpha2.MXJobFailed,
 		},
 		testCase{
-			description:             "(No chief worker) Worker is succeeded",
-			tfJob:                   testutil.NewTFJob(1, 0),
-			expectedFailedPS:        0,
-			expectedSucceededPS:     0,
-			expectedActivePS:        0,
+			description:             "Worker is succeeded",
+			mxJob:                   testutil.NewMXJob(1, 0),
+			expectedFailedServer:        0,
+			expectedSucceededServer:     0,
+			expectedActiveServer:        0,
 			expectedFailedWorker:    0,
 			expectedSucceededWorker: 1,
 			expectedActiveWorker:    0,
-			expectedFailedChief:     0,
-			expectedSucceededChief:  0,
-			expectedActiveChief:     0,
+			expectedFailedScheduler:     0,
+			expectedSucceededScheduler:  0,
+			expectedActiveScheduler:     1,
 			restart:                 false,
-			expectedType:            tfv1alpha2.TFJobSucceeded,
+			expectedType:            mxv1alpha2.MXJobSucceeded,
 		},
 		testCase{
-			description:             "(No chief worker) Worker is running",
-			tfJob:                   testutil.NewTFJob(1, 0),
-			expectedFailedPS:        0,
-			expectedSucceededPS:     0,
-			expectedActivePS:        0,
+			description:             " Worker is running",
+			mxJob:                   testutil.NewMXJob(1, 0),
+			expectedFailedServer:        0,
+			expectedSucceededServer:     0,
+			expectedActiveServer:        0,
 			expectedFailedWorker:    0,
 			expectedSucceededWorker: 0,
 			expectedActiveWorker:    1,
-			expectedFailedChief:     0,
-			expectedSucceededChief:  0,
-			expectedActiveChief:     0,
+			expectedFailedScheduler:     0,
+			expectedSucceededScheduler:  0,
+			expectedActiveScheduler:     1,
 			restart:                 false,
-			expectedType:            tfv1alpha2.TFJobRunning,
+			expectedType:            mxv1alpha2.MXJobRunning,
 		},
 		testCase{
-			description:             "(No chief worker) 2 workers are succeeded, 2 workers are active",
-			tfJob:                   testutil.NewTFJob(4, 2),
-			expectedFailedPS:        0,
-			expectedSucceededPS:     0,
-			expectedActivePS:        2,
+			description:             " 2 workers are succeeded, 2 workers are active",
+			mxJob:                   testutil.NewMXJob(4, 2),
+			expectedFailedServer:        0,
+			expectedSucceededServer:     0,
+			expectedActiveServer:        2,
 			expectedFailedWorker:    0,
 			expectedSucceededWorker: 2,
 			expectedActiveWorker:    2,
-			expectedFailedChief:     0,
-			expectedSucceededChief:  0,
-			expectedActiveChief:     0,
+			expectedFailedScheduler:     0,
+			expectedSucceededScheduler:  0,
+			expectedActiveScheduler:     1,
 			restart:                 false,
-			expectedType:            tfv1alpha2.TFJobRunning,
+			expectedType:            mxv1alpha2.MXJobRunning,
 		},
 		testCase{
-			description:             "(No chief worker) 2 workers are running, 2 workers are failed",
-			tfJob:                   testutil.NewTFJob(4, 2),
-			expectedFailedPS:        0,
-			expectedSucceededPS:     0,
-			expectedActivePS:        2,
+			description:             " 2 workers are running, 2 workers are failed",
+			mxJob:                   testutil.NewMXJob(4, 2),
+			expectedFailedServer:        0,
+			expectedSucceededServer:     0,
+			expectedActiveServer:        2,
 			expectedFailedWorker:    2,
 			expectedSucceededWorker: 0,
 			expectedActiveWorker:    2,
-			expectedFailedChief:     0,
-			expectedSucceededChief:  0,
-			expectedActiveChief:     0,
+			expectedFailedScheduler:     0,
+			expectedSucceededScheduler:  0,
+			expectedActiveScheduler:     1,
 			restart:                 false,
-			expectedType:            tfv1alpha2.TFJobFailed,
+			expectedType:            mxv1alpha2.MXJobFailed,
 		},
 		testCase{
-			description:             "(No chief worker) 2 workers are succeeded, 2 workers are failed",
-			tfJob:                   testutil.NewTFJob(4, 2),
-			expectedFailedPS:        0,
-			expectedSucceededPS:     0,
-			expectedActivePS:        2,
+			description:             " 2 workers are succeeded, 2 workers are failed",
+			mxJob:                   testutil.NewMXJob(4, 2),
+			expectedFailedServer:        0,
+			expectedSucceededServer:     0,
+			expectedActiveServer:        2,
 			expectedFailedWorker:    2,
 			expectedSucceededWorker: 2,
 			expectedActiveWorker:    0,
-			expectedFailedChief:     0,
-			expectedSucceededChief:  0,
-			expectedActiveChief:     0,
+			expectedFailedScheduler:     0,
+			expectedSucceededScheduler:  0,
+			expectedActiveScheduler:     1,
 			restart:                 false,
-			expectedType:            tfv1alpha2.TFJobFailed,
-		},
-		testCase{
-			description:             "Chief is running, workers are failed",
-			tfJob:                   testutil.NewTFJobWithChief(4, 2),
-			expectedFailedPS:        0,
-			expectedSucceededPS:     0,
-			expectedActivePS:        2,
-			expectedFailedWorker:    4,
-			expectedSucceededWorker: 0,
-			expectedActiveWorker:    0,
-			expectedFailedChief:     0,
-			expectedSucceededChief:  0,
-			expectedActiveChief:     1,
-			restart:                 false,
-			expectedType:            tfv1alpha2.TFJobRunning,
-		},
-		testCase{
-			description:             "Chief is running, workers are succeeded",
-			tfJob:                   testutil.NewTFJobWithChief(4, 2),
-			expectedFailedPS:        0,
-			expectedSucceededPS:     0,
-			expectedActivePS:        2,
-			expectedFailedWorker:    0,
-			expectedSucceededWorker: 4,
-			expectedActiveWorker:    0,
-			expectedFailedChief:     0,
-			expectedSucceededChief:  0,
-			expectedActiveChief:     1,
-			restart:                 false,
-			expectedType:            tfv1alpha2.TFJobRunning,
-		},
-		testCase{
-			description:             "Chief is running, a PS is failed",
-			tfJob:                   testutil.NewTFJobWithChief(4, 2),
-			expectedFailedPS:        1,
-			expectedSucceededPS:     0,
-			expectedActivePS:        1,
-			expectedFailedWorker:    0,
-			expectedSucceededWorker: 4,
-			expectedActiveWorker:    0,
-			expectedFailedChief:     0,
-			expectedSucceededChief:  0,
-			expectedActiveChief:     1,
-			restart:                 false,
-			expectedType:            tfv1alpha2.TFJobFailed,
-		},
-		testCase{
-			description:             "Chief is failed, workers are succeeded",
-			tfJob:                   testutil.NewTFJobWithChief(4, 2),
-			expectedFailedPS:        0,
-			expectedSucceededPS:     0,
-			expectedActivePS:        2,
-			expectedFailedWorker:    0,
-			expectedSucceededWorker: 4,
-			expectedActiveWorker:    0,
-			expectedFailedChief:     1,
-			expectedSucceededChief:  0,
-			expectedActiveChief:     0,
-			restart:                 false,
-			expectedType:            tfv1alpha2.TFJobFailed,
-		},
-		testCase{
-			description:             "Chief is succeeded, workers are failed",
-			tfJob:                   testutil.NewTFJobWithChief(4, 2),
-			expectedFailedPS:        0,
-			expectedSucceededPS:     0,
-			expectedActivePS:        2,
-			expectedFailedWorker:    4,
-			expectedSucceededWorker: 0,
-			expectedActiveWorker:    0,
-			expectedFailedChief:     0,
-			expectedSucceededChief:  1,
-			expectedActiveChief:     0,
-			restart:                 false,
-			expectedType:            tfv1alpha2.TFJobSucceeded,
-		},
-		testCase{
-			description:             "Chief is failed and restarting",
-			tfJob:                   testutil.NewTFJobWithChief(4, 2),
-			expectedFailedPS:        0,
-			expectedSucceededPS:     0,
-			expectedActivePS:        2,
-			expectedFailedWorker:    4,
-			expectedSucceededWorker: 0,
-			expectedActiveWorker:    0,
-			expectedFailedChief:     1,
-			expectedSucceededChief:  0,
-			expectedActiveChief:     0,
-			restart:                 true,
-			expectedType:            tfv1alpha2.TFJobRestarting,
+			expectedType:            mxv1alpha2.MXJobFailed,
 		},
 	}
 
 	for _, c := range testCases {
-		initializeTFReplicaStatuses(c.tfJob, tfv1alpha2.TFReplicaTypeWorker)
-		initializeTFReplicaStatuses(c.tfJob, tfv1alpha2.TFReplicaTypeChief)
-		initializeTFReplicaStatuses(c.tfJob, tfv1alpha2.TFReplicaTypePS)
+		initializeMXReplicaStatuses(c.mxJob, mxv1alpha2.MXReplicaTypeScheduler)
+		initializeMXReplicaStatuses(c.mxJob, mxv1alpha2.MXReplicaTypeServer)
+		initializeMXReplicaStatuses(c.mxJob, mxv1alpha2.MXReplicaTypeWorker)
 
-		setStatusForTest(c.tfJob, tfv1alpha2.TFReplicaTypePS, c.expectedFailedPS, c.expectedSucceededPS, c.expectedActivePS, t)
-		setStatusForTest(c.tfJob, tfv1alpha2.TFReplicaTypeWorker, c.expectedFailedWorker, c.expectedSucceededWorker, c.expectedActiveWorker, t)
-		setStatusForTest(c.tfJob, tfv1alpha2.TFReplicaTypeChief, c.expectedFailedChief, c.expectedSucceededChief, c.expectedActiveChief, t)
+		setStatusForTest(c.mxJob, mxv1alpha2.MXReplicaTypeScheduler, c.expectedFailedScheduler, c.expectedSucceededScheduler, c.expectedActiveScheduler, t)
+		setStatusForTest(c.mxJob, mxv1alpha2.MXReplicaTypeServer, c.expectedFailedServer, c.expectedSucceededServer, c.expectedActiveServer, t)
+		setStatusForTest(c.mxJob, mxv1alpha2.MXReplicaTypeWorker, c.expectedFailedWorker, c.expectedSucceededWorker, c.expectedActiveWorker, t)
 
-		if _, ok := c.tfJob.Spec.TFReplicaSpecs[tfv1alpha2.TFReplicaTypeChief]; ok {
-			err := updateStatusSingle(c.tfJob, tfv1alpha2.TFReplicaTypeChief, 1, c.restart)
+		if _, ok := c.mxJob.Spec.MXReplicaSpecs[mxv1alpha2.MXReplicaTypeScheduler]; ok {
+			err := updateStatusSingle(c.mxJob, mxv1alpha2.MXReplicaTypeScheduler, 1, c.restart)
 			if err != nil {
 				t.Errorf("%s: Expected error %v to be nil", c.description, err)
 			}
-			if c.tfJob.Spec.TFReplicaSpecs[tfv1alpha2.TFReplicaTypeWorker] != nil {
-				replicas := c.tfJob.Spec.TFReplicaSpecs[tfv1alpha2.TFReplicaTypeWorker].Replicas
-				err := updateStatusSingle(c.tfJob, tfv1alpha2.TFReplicaTypeWorker, int(*replicas), c.restart)
+			if c.mxJob.Spec.MXReplicaSpecs[mxv1alpha2.MXReplicaTypeWorker] != nil {
+				replicas := c.mxJob.Spec.MXReplicaSpecs[mxv1alpha2.MXReplicaTypeWorker].Replicas
+				err := updateStatusSingle(c.mxJob, mxv1alpha2.MXReplicaTypeWorker, int(*replicas), c.restart)
 				if err != nil {
 					t.Errorf("%s: Expected error %v to be nil", c.description, err)
 				}
 			}
-			if c.tfJob.Spec.TFReplicaSpecs[tfv1alpha2.TFReplicaTypePS] != nil {
-				replicas := c.tfJob.Spec.TFReplicaSpecs[tfv1alpha2.TFReplicaTypePS].Replicas
-				err := updateStatusSingle(c.tfJob, tfv1alpha2.TFReplicaTypePS, int(*replicas), c.restart)
+			if c.mxJob.Spec.MXReplicaSpecs[mxv1alpha2.MXReplicaTypeServer] != nil {
+				replicas := c.mxJob.Spec.MXReplicaSpecs[mxv1alpha2.MXReplicaTypeServer].Replicas
+				err := updateStatusSingle(c.mxJob, mxv1alpha2.MXReplicaTypeServer, int(*replicas), c.restart)
 				if err != nil {
 					t.Errorf("%s: Expected error %v to be nil", c.description, err)
 				}
 			}
 		} else {
-			if c.tfJob.Spec.TFReplicaSpecs[tfv1alpha2.TFReplicaTypeWorker] != nil {
-				replicas := c.tfJob.Spec.TFReplicaSpecs[tfv1alpha2.TFReplicaTypeWorker].Replicas
-				err := updateStatusSingle(c.tfJob, tfv1alpha2.TFReplicaTypeWorker, int(*replicas), c.restart)
+			if c.mxJob.Spec.MXReplicaSpecs[mxv1alpha2.MXReplicaTypeWorker] != nil {
+				replicas := c.mxJob.Spec.MXReplicaSpecs[mxv1alpha2.MXReplicaTypeWorker].Replicas
+				err := updateStatusSingle(c.mxJob, mxv1alpha2.MXReplicaTypeWorker, int(*replicas), c.restart)
 				if err != nil {
 					t.Errorf("%s: Expected error %v to be nil", c.description, err)
 				}
 			}
-			if c.tfJob.Spec.TFReplicaSpecs[tfv1alpha2.TFReplicaTypePS] != nil {
-				replicas := c.tfJob.Spec.TFReplicaSpecs[tfv1alpha2.TFReplicaTypePS].Replicas
-				err := updateStatusSingle(c.tfJob, tfv1alpha2.TFReplicaTypePS, int(*replicas), c.restart)
+			if c.mxJob.Spec.MXReplicaSpecs[mxv1alpha2.MXReplicaTypeServer] != nil {
+				replicas := c.mxJob.Spec.MXReplicaSpecs[mxv1alpha2.MXReplicaTypeServer].Replicas
+				err := updateStatusSingle(c.mxJob, mxv1alpha2.MXReplicaTypeServer, int(*replicas), c.restart)
 				if err != nil {
 					t.Errorf("%s: Expected error %v to be nil", c.description, err)
 				}
@@ -344,10 +209,10 @@ func TestStatus(t *testing.T) {
 		}
 
 		// Test filterOutCondition
-		filterOutConditionTest(c.tfJob.Status, t)
+		filterOutConditionTest(c.mxJob.Status, t)
 
 		found := false
-		for _, condition := range c.tfJob.Status.Conditions {
+		for _, condition := range c.mxJob.Status.Conditions {
 			if condition.Type == c.expectedType {
 				found = true
 			}
@@ -358,27 +223,27 @@ func TestStatus(t *testing.T) {
 	}
 }
 
-func setStatusForTest(tfJob *tfv1alpha2.TFJob, typ tfv1alpha2.TFReplicaType, failed, succeeded, active int32, t *testing.T) {
-	pod := testutil.NewBasePod("pod", tfJob, t)
+func setStatusForTest(mxJob *mxv1alpha2.MXJob, typ mxv1alpha2.MXReplicaType, failed, succeeded, active int32, t *testing.T) {
+	pod := testutil.NewBasePod("pod", mxJob, t)
 	var i int32
 	for i = 0; i < failed; i++ {
 		pod.Status.Phase = v1.PodFailed
-		updateTFJobReplicaStatuses(tfJob, typ, pod)
+		updateMXJobReplicaStatuses(mxJob, typ, pod)
 	}
 	for i = 0; i < succeeded; i++ {
 		pod.Status.Phase = v1.PodSucceeded
-		updateTFJobReplicaStatuses(tfJob, typ, pod)
+		updateMXJobReplicaStatuses(mxJob, typ, pod)
 	}
 	for i = 0; i < active; i++ {
 		pod.Status.Phase = v1.PodRunning
-		updateTFJobReplicaStatuses(tfJob, typ, pod)
+		updateMXJobReplicaStatuses(mxJob, typ, pod)
 	}
 }
 
-func filterOutConditionTest(status tfv1alpha2.TFJobStatus, t *testing.T) {
+func filterOutConditionTest(status mxv1alpha2.MXJobStatus, t *testing.T) {
 	flag := isFailed(status) || isSucceeded(status)
 	for _, condition := range status.Conditions {
-		if flag && condition.Type == tfv1alpha2.TFJobRunning && condition.Status == v1.ConditionTrue {
+		if flag && condition.Type == mxv1alpha2.MXJobRunning && condition.Status == v1.ConditionTrue {
 			t.Error("Error condition status when succeeded or failed")
 		}
 	}
