@@ -29,24 +29,24 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/cache"
 
-	"github.com/kubeflow/mx-operator.v2/cmd/mx-operator.v2/app/options"
-	mxv1alpha2 "github.com/kubeflow/mx-operator.v2/pkg/apis/mxnet/v1alpha2"
-	mxjobclientset "github.com/kubeflow/mx-operator.v2/pkg/client/clientset/versioned"
-	mxjobscheme "github.com/kubeflow/mx-operator.v2/pkg/client/clientset/versioned/scheme"
-	mxjobinformers "github.com/kubeflow/mx-operator.v2/pkg/client/informers/externalversions"
-	mxjobinformersv1alpha2 "github.com/kubeflow/mx-operator.v2/pkg/client/informers/externalversions/kubeflow/v1alpha2"
-	mxjoblisters "github.com/kubeflow/mx-operator.v2/pkg/client/listers/kubeflow/v1alpha2"
-	"github.com/kubeflow/mx-operator.v2/pkg/controller.v2/jobcontroller"
-	mxlogger "github.com/kubeflow/mx-operator.v2/pkg/logger"
+	"github.com/kubeflow/mxnet-operator.v2/cmd/mxnet-operator.v2/app/options"
+	mxv1alpha2 "github.com/kubeflow/mxnet-operator.v2/pkg/apis/mxnet/v1alpha2"
+	mxjobclientset "github.com/kubeflow/mxnet-operator.v2/pkg/client/clientset/versioned"
+	mxjobscheme "github.com/kubeflow/mxnet-operator.v2/pkg/client/clientset/versioned/scheme"
+	mxjobinformers "github.com/kubeflow/mxnet-operator.v2/pkg/client/informers/externalversions"
+	mxjobinformersv1alpha2 "github.com/kubeflow/mxnet-operator.v2/pkg/client/informers/externalversions/kubeflow/v1alpha2"
+	mxjoblisters "github.com/kubeflow/mxnet-operator.v2/pkg/client/listers/kubeflow/v1alpha2"
+	"github.com/kubeflow/mxnet-operator.v2/pkg/controller.v2/jobcontroller"
+	mxlogger "github.com/kubeflow/mxnet-operator.v2/pkg/logger"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 const (
-	controllerName = "mx-operator"
+	controllerName = "mxnet-operator"
 
 	// labels for pods and servers.
-	mxReplicaTypeLabel  = "mx-replica-type"
-	mxReplicaIndexLabel = "mx-replica-index"
+	mxReplicaTypeLabel  = "mxnet-replica-type"
+	mxReplicaIndexLabel = "mxnet-replica-index"
 	labelGroupName      = "group_name"
 	labelMXJobName      = "mx_job_name"
 )
@@ -57,7 +57,7 @@ var (
 	// key function but it should be just fine for non delete events.
 	KeyFunc = cache.DeletionHandlingMetaNamespaceKeyFunc
 
-	// DefaultMXControllerConfiguration is the suggested mx-operator configuration for production.
+	// DefaultMXControllerConfiguration is the suggested mxnet-operator configuration for production.
 	DefaultMXControllerConfiguration = jobcontroller.JobControllerConfiguration{
 		ReconcilerSyncLoopPeriod: metav1.Duration{Duration: 15 * time.Second},
 		EnableGangScheduling:     false,

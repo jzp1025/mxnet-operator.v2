@@ -21,8 +21,8 @@ import (
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	mxv1alpha2 "github.com/kubeflow/mx-operator.v2/pkg/apis/mxnet/v1alpha2"
-	mxlogger "github.com/kubeflow/mx-operator.v2/pkg/logger"
+	mxv1alpha2 "github.com/kubeflow/mxnet-operator.v2/pkg/apis/mxnet/v1alpha2"
+	mxlogger "github.com/kubeflow/mxnet-operator.v2/pkg/logger"
 )
 
 const (

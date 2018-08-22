@@ -22,7 +22,7 @@ import (
 	"k8s.io/client-go/util/workqueue"
 	"k8s.io/kubernetes/pkg/controller"
 
-	"github.com/kubeflow/mx-operator.v2/pkg/control"
+	"github.com/kubeflow/mxnet-operator.v2/pkg/control"
 )
 
 // Common Interaface to be implemented by all operators
@@ -105,7 +105,7 @@ type JobController struct {
 
 	// A TTLCache of pod/services creates/deletes each job expects to see
 	// We use Job namespace/name + ReplicaType + pods/services as an expectation key,
-	// For example, there is a MXJob with namespace "mx-operator" and name "mxjob-abc":
+	// For example, there is a MXJob with namespace "mxnet-operator" and name "mxjob-abc":
 	// {
 	//     "Scheduler": {
 	//         "Replicas": 1,
@@ -118,10 +118,10 @@ type JobController struct {
 	//     }
 	// }
 	// We will create 4 expectations:
-	// - "mx-operator/mxjob-abc/scheduler/services", expects 1 adds.
-	// - "mx-operator/mxjob-abc/scheduler/pods", expects 1 adds.
-	// - "mx-operator/mxjob-abc/server/pods", expects 2 adds.
-	// - "mx-operator/mxjob-abc/worker/pods", expects 4 adds.
+	// - "mxnet-operator/mxjob-abc/scheduler/services", expects 1 adds.
+	// - "mxnet-operator/mxjob-abc/scheduler/pods", expects 1 adds.
+	// - "mxnet-operator/mxjob-abc/server/pods", expects 2 adds.
+	// - "mxnet-operator/mxjob-abc/worker/pods", expects 4 adds.
 	Expectations controller.ControllerExpectationsInterface
 
 	// workQueue is a rate limited work queue. This is used to queue work to be

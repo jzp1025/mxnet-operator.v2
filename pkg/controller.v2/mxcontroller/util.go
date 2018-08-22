@@ -17,7 +17,7 @@ package mxcontroller
 import (
 	"fmt"
 
-	mxv1alpha2 "github.com/kubeflow/mx-operator.v2/pkg/apis/mxnet/v1alpha2"
+	mxv1alpha2 "github.com/kubeflow/mxnet-operator.v2/pkg/apis/mxnet/v1alpha2"
 )
 
 var (

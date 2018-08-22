@@ -48,7 +48,7 @@ type MXJobSpec struct {
 	// Default to Running.
 	CleanPodPolicy *CleanPodPolicy `json:"cleanPodPolicy,omitempty"`
 
-	// TTLSecondsAfterFinished is the TTL to clean up mx-jobs (temporary
+	// TTLSecondsAfterFinished is the TTL to clean up mxnet-jobs (temporary
 	// before kubernetes adds the cleanup controller).
 	// It may take extra ReconcilePeriod seconds for the cleanup, since
 	// reconcile gets called periodically.
@@ -105,7 +105,7 @@ const (
 	RestartPolicyNever     RestartPolicy = "Never"
 
 	// `ExitCode` policy means that user should add exit code by themselves,
-	// `mx-operator` will check these exit codes to
+	// `mxnet-operator` will check these exit codes to
 	// determine the behavior when an error occurs:
 	// - 1-127: permanent error, do not restart.
 	// - 128-255: retryable error, will restart the pod.

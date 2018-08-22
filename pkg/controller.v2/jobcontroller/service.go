@@ -9,7 +9,7 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/kubernetes/pkg/controller"
 
-	"github.com/kubeflow/mx-operator.v2/pkg/control"
+	"github.com/kubeflow/mxnet-operator.v2/pkg/control"
 )
 
 // When a service is created, enqueue the controller that manages it and update its expectations.

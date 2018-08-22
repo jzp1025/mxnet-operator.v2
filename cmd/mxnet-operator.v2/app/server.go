@@ -125,12 +125,12 @@ func Run(opt *options.ServerOption) error {
 
 	// Prepare event clients.
 	eventBroadcaster := record.NewBroadcaster()
-	recorder := eventBroadcaster.NewRecorder(scheme.Scheme, v1.EventSource{Component: "mx-operator"})
+	recorder := eventBroadcaster.NewRecorder(scheme.Scheme, v1.EventSource{Component: "mxnet-operator"})
 
 	rl := &resourcelock.EndpointsLock{
 		EndpointsMeta: metav1.ObjectMeta{
 			Namespace: namespace,
-			Name:      "mx-operator",
+			Name:      "mxnet-operator",
 		},
 		Client: leaderElectionClientSet.CoreV1(),
 		LockConfig: resourcelock.ResourceLockConfig{
@@ -157,7 +157,7 @@ func Run(opt *options.ServerOption) error {
 }
 
 func createClientSets(config *restclientset.Config) (kubeclientset.Interface, kubeclientset.Interface, mxjobclientset.Interface, error) {
-	kubeClientSet, err := kubeclientset.NewForConfig(restclientset.AddUserAgent(config, "mx-operator"))
+	kubeClientSet, err := kubeclientset.NewForConfig(restclientset.AddUserAgent(config, "mxnet-operator"))
 	if err != nil {
 		return nil, nil, nil, err
 	}

@@ -11,7 +11,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/kubernetes/pkg/controller"
 
-	jclogger "github.com/kubeflow/mx-operator.v2/pkg/logger"
+	jclogger "github.com/kubeflow/mxnet-operator.v2/pkg/logger"
 )
 
 // When a pod is created, enqueue the job that manages it and update its expectations.

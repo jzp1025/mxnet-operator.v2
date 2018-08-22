@@ -10,8 +10,8 @@ import (
 	metav1unstructured "k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/client-go/kubernetes/scheme"
 
-	mxv1alpha2 "github.com/kubeflow/mx-operator.v2/pkg/apis/mxnet/v1alpha2"
-	mxlogger "github.com/kubeflow/mx-operator.v2/pkg/logger"
+	mxv1alpha2 "github.com/kubeflow/mxnet-operator.v2/pkg/apis/mxnet/v1alpha2"
+	mxlogger "github.com/kubeflow/mxnet-operator.v2/pkg/logger"
 )
 
 const (

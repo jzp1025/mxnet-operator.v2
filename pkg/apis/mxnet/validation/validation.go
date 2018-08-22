@@ -20,8 +20,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	mxv2 "github.com/kubeflow/mx-operator.v2/pkg/apis/mxnet/v1alpha2"
-	//"github.com/kubeflow/tf-operator/pkg/util"
+	mxv2 "github.com/kubeflow/mxnet-operator.v2/pkg/apis/mxnet/v1alpha2"
 )
 
 // ValidateAlphaTwoMXJobSpec checks that the v1alpha2.MXJobSpec is valid.
