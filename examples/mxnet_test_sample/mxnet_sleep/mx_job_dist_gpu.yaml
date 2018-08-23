@@ -1,0 +1,30 @@
+apiVersion: "kubeflow.org/v1alpha2"
+kind: "MXJob"
+metadata:
+  name: "mxnet-job"
+spec:
+  mxReplicaSpecs:
+    Scheduler:
+      replicas: 1
+      restartPolicy: Never
+      template:
+        spec:
+          containers:
+            - name: mxnet
+              image: jzp1025/mxnet:gpu_sleep
+    Server:
+      replicas: 1
+      restartPolicy: Never
+      template:
+        spec:
+          containers:
+            - name: mxnet
+              image: jzp1025/mxnet:gpu_sleep
+    Worker:
+      replicas: 1
+      restartPolicy: Never
+      template:
+        spec:
+          containers:
+            - name: mxnet
+              image: jzp1025/mxnet:gpu_sleep
