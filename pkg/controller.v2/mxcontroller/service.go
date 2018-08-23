@@ -40,10 +40,6 @@ func (tc *MXController) reconcileServices(
 	rtype mxv1alpha2.MXReplicaType,
 	spec *mxv1alpha2.MXReplicaSpec) error {
 
-	if rtype != mxv1alpha2.MXReplicaTypeScheduler {
-		return nil	
-	}
-
 	// Convert MXReplicaType to lower string.
 	rt := strings.ToLower(string(rtype))
 

@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: mx-job-operator
-        image: jzp1025/mxnet-operator:v2_sleep
+        image: mxjob/mxnet-operator:v2
         imagePullPolicy: Always
         env:
         - name: MY_POD_NAMESPACE

@@ -85,9 +85,10 @@ func (tc *MXController) deletePodsAndServices(mxJob *mxv1alpha2.MXJob, pods []*v
 	}
 
 	for _, pod := range pods {
-		if *mxJob.Spec.CleanPodPolicy == mxv1alpha2.CleanPodPolicyRunning && pod.Status.Phase != v1.PodRunning {
+		if *mxJob.Spec.CleanPodPolicy == mxv1alpha2.CleanPodPolicyRunning && pod.Status.Phase != v1.PodRunning && pod.Status.Phase != v1.PodSucceeded{
 			continue
 		}
+
 		if err := tc.PodControl.DeletePod(pod.Namespace, pod.Name, mxJob); err != nil {
 			return err
 		}
